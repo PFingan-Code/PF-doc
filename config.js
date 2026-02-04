@@ -185,7 +185,7 @@ const config = {
     mermaid: true, // Mermaid图表渲染
     github: {
       enable: true, // 是否启用GitHub相关功能
-      repo_url: "https://github.com/LoosePrince/PF-doc", // GitHub仓库地址
+      repo_url: "https://github.com/PFingan-Code/PF-doc", // GitHub仓库地址
       edit_link: true, // 是否启用参与编辑链接（点击一键跳转github的编辑）
       branch: "main", // 默认分支名称
       show_avatar: true // 显示参与编辑者的github头像而不是名称
@@ -204,11 +204,11 @@ const config = {
     links: [ // 页脚链接
       {
         text: "GitHub",
-        url: "https://github.com/LoosePrince/PF-doc"
+        url: "https://github.com/PFingan-Code/PF-doc"
       },
       {
         text: "报告问题",
-        url: "https://github.com/LoosePrince/PF-doc/issues"
+        url: "https://github.com/PFingan-Code/PF-doc/issues"
       }
     ]
   }
