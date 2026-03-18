@@ -223,7 +223,7 @@
                     "path": "PF-cq-api/机器人食用指南",
                     "children": [
                         {
-                            "title": "LiteLoaderQQNT + LLOneBot",
+                            "title": "LLOneBot",
                             "path": "PF-cq-api/机器人食用指南/LLOneBot.md",
                             "children": [],
                             "git": {
@@ -404,7 +404,7 @@
                     }
                 },
                 {
-                    "title": "WebUI 配置说明",
+                    "title": "配置",
                     "path": "PF-webui/配置说明.md",
                     "children": [],
                     "git": {
@@ -421,6 +421,31 @@
                                 "name": "树梢",
                                 "email": "pfingan@foxmail.com",
                                 "commits": 7,
+                                "github_username": "LoosePrince",
+                                "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
+                                "last_commit_timestamp": 1773837831
+                            }
+                        ]
+                    }
+                },
+                {
+                    "title": "多服面板合并",
+                    "path": "PF-webui/多服面板合并.md",
+                    "children": [],
+                    "git": {
+                        "last_modified": {
+                            "timestamp": 1773837831,
+                            "author": "树梢",
+                            "email": "pfingan@foxmail.com",
+                            "message": "更新webui的多服配置",
+                            "github_username": "LoosePrince",
+                            "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4"
+                        },
+                        "contributors": [
+                            {
+                                "name": "树梢",
+                                "email": "pfingan@foxmail.com",
+                                "commits": 1,
                                 "github_username": "LoosePrince",
                                 "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
                                 "last_commit_timestamp": 1773837831
@@ -509,31 +534,6 @@
                         }
                     ],
                     "index": null
-                },
-                {
-                    "title": "多服面板合并（主/子服、代理与配对）",
-                    "path": "PF-webui/多服面板合并.md",
-                    "children": [],
-                    "git": {
-                        "last_modified": {
-                            "timestamp": 1773837831,
-                            "author": "树梢",
-                            "email": "pfingan@foxmail.com",
-                            "message": "更新webui的多服配置",
-                            "github_username": "LoosePrince",
-                            "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4"
-                        },
-                        "contributors": [
-                            {
-                                "name": "树梢",
-                                "email": "pfingan@foxmail.com",
-                                "commits": 1,
-                                "github_username": "LoosePrince",
-                                "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
-                                "last_commit_timestamp": 1773837831
-                            }
-                        ]
-                    }
                 }
             ],
             "index": {
