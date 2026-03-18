@@ -384,10 +384,10 @@
                     "children": [],
                     "git": {
                         "last_modified": {
-                            "timestamp": 1755514303,
+                            "timestamp": 1773837831,
                             "author": "树梢",
                             "email": "pfingan@foxmail.com",
-                            "message": "新增服务器聊天页（/chat）相关配置与API文档",
+                            "message": "更新webui的多服配置",
                             "github_username": "LoosePrince",
                             "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4"
                         },
@@ -395,10 +395,10 @@
                             {
                                 "name": "树梢",
                                 "email": "pfingan@foxmail.com",
-                                "commits": 6,
+                                "commits": 7,
                                 "github_username": "LoosePrince",
                                 "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
-                                "last_commit_timestamp": 1755514303
+                                "last_commit_timestamp": 1773837831
                             }
                         ]
                     }
@@ -409,10 +409,10 @@
                     "children": [],
                     "git": {
                         "last_modified": {
-                            "timestamp": 1755514303,
+                            "timestamp": 1773837831,
                             "author": "树梢",
                             "email": "pfingan@foxmail.com",
-                            "message": "新增服务器聊天页（/chat）相关配置与API文档",
+                            "message": "更新webui的多服配置",
                             "github_username": "LoosePrince",
                             "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4"
                         },
@@ -420,10 +420,10 @@
                             {
                                 "name": "树梢",
                                 "email": "pfingan@foxmail.com",
-                                "commits": 6,
+                                "commits": 7,
                                 "github_username": "LoosePrince",
                                 "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
-                                "last_commit_timestamp": 1755514303
+                                "last_commit_timestamp": 1773837831
                             }
                         ]
                     }
@@ -509,6 +509,31 @@
                         }
                     ],
                     "index": null
+                },
+                {
+                    "title": "多服面板合并（主/子服、代理与配对）",
+                    "path": "PF-webui/多服面板合并.md",
+                    "children": [],
+                    "git": {
+                        "last_modified": {
+                            "timestamp": 1773837831,
+                            "author": "树梢",
+                            "email": "pfingan@foxmail.com",
+                            "message": "更新webui的多服配置",
+                            "github_username": "LoosePrince",
+                            "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4"
+                        },
+                        "contributors": [
+                            {
+                                "name": "树梢",
+                                "email": "pfingan@foxmail.com",
+                                "commits": 1,
+                                "github_username": "LoosePrince",
+                                "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
+                                "last_commit_timestamp": 1773837831
+                            }
+                        ]
+                    }
                 }
             ],
             "index": {
@@ -516,10 +541,10 @@
                 "path": "PF-webui/README.md",
                 "git": {
                     "last_modified": {
-                        "timestamp": 1755514303,
+                        "timestamp": 1773837831,
                         "author": "树梢",
                         "email": "pfingan@foxmail.com",
-                        "message": "新增服务器聊天页（/chat）相关配置与API文档",
+                        "message": "更新webui的多服配置",
                         "github_username": "LoosePrince",
                         "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4"
                     },
@@ -527,10 +552,10 @@
                         {
                             "name": "树梢",
                             "email": "pfingan@foxmail.com",
-                            "commits": 6,
+                            "commits": 7,
                             "github_username": "LoosePrince",
                             "github_avatar": "https://avatars.githubusercontent.com/u/107794785?v=4",
-                            "last_commit_timestamp": 1755514303
+                            "last_commit_timestamp": 1773837831
                         }
                     ]
                 }
