@@ -232,12 +232,12 @@ const config = {
       //   url: "https://example.com/docs/path.json",
       //   title: "外部文档"
       // },
-      // {
-      //   mount_path: "GitHub文档",
-      //   mode: "github_tree",
-      //   url: "https://github.com/owner/repo/tree/main/docs",
-      //   title: "GitHub文档"
-      // }
+      {
+        mount_path: "PF-webui/开发",
+        mode: "github_tree",
+        url: "https://github.com/PFingan-Code/PF-MCDR-WebUI/tree/main/docs",
+        title: "PF-webui/开发"
+      }
     ]
   },
 
