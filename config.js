@@ -24,10 +24,8 @@ const config = {
   // 布局设置
   layout: {
     show_header: true, // 是否显示顶栏
-    use_custom_header: false, // 是否使用自定义的header.html文件
     header_file: "/header.html", // 自定义顶栏文件路径
     show_footer: true, // 是否显示底栏
-    use_custom_footer: true, // 是否使用自定义的footer.html文件
     footer_file: "/footer.html", // 自定义底栏文件路径
     sidebar_width: "250px", // 侧边栏宽度
     toc_width: "280px", // 目录宽度
@@ -36,6 +34,8 @@ const config = {
 
   // 动画设置
   animation: {
+    enable: true, // 动画总开关，设置为false时将禁用所有动画效果，优先级高于各子模块设置
+
     // 左侧边栏（文档导航）
     sidebar: {
       enable: true, // 是否启用左侧导航交错动画
@@ -44,7 +44,7 @@ const config = {
       enable_skeleton: true, // 是否启用骨架屏加载动画
       skeleton_duration: 1500 // 骨架屏shimmer动画周期(毫秒)
     },
-    
+
     // 右侧边栏（文章目录）
     toc: {
       enable: true, // 是否启用右侧目录交错动画
@@ -53,14 +53,14 @@ const config = {
       enable_skeleton: true, // 是否启用骨架屏加载动画
       skeleton_duration: 1500 // 骨架屏shimmer动画周期(毫秒)
     },
-    
+
     // 文章内容
     article: {
       enable_skeleton: true, // 是否启用文章加载骨架屏动画
       enable_render: true, // 是否启用文章内容渲染动画（淡入）
       render_duration: 600 // 渲染动画持续时间(毫秒)
     },
-    
+
     // 通用设置
     general: {
       min_duration: 300 // 加载动画最小显示时长(毫秒) - 确保用户能看到加载过程
@@ -146,9 +146,64 @@ const config = {
     ]
   },
 
+  // 首页设置
+  home: {
+    use_file: true, // 是否使用外部HTML文件作为首页内容
+    file_path: "/home.html", // 首页内容文件路径
+    // 如果 use_file 为 false，则使用以下配置动态生成内容
+    // hero: {
+    //   title: "EasyDocument",
+    //   subtitle: "简易静态文档系统",
+    //   description: "一个轻量级、免编译的纯静态前端文档系统。简单添加 Markdown 或 HTML 文件，即可生成美观、结构化的文档网站。",
+    //   logo: "/assets/img/logo.svg",
+    //   button_text: "查看文档",
+    //   button_link: "/main/"
+    // },
+    // features: [
+    //   {
+    //     icon: "fas fa-feather",
+    //     title: "轻量高效",
+    //     description: "无需编译构建，纯前端实现，简单易用且响应迅速",
+    //     color: "blue"
+    //   },
+    //   {
+    //     icon: "fas fa-paint-brush",
+    //     title: "美观现代",
+    //     description: "精致排版，现代设计，丰富交互效果，呈现极致文档体验",
+    //     color: "orange"
+    //   },
+    //   {
+    //     icon: "fas fa-cog",
+    //     title: "灵活可配置",
+    //     description: "丰富的配置选项，自定义网站外观、布局和功能特性",
+    //     color: "green"
+    //   }
+    // ],
+    // // 快速开始指南
+    // get_started: {
+    //   enable: true,
+    //   title: "快速开始使用",
+    //   steps: [
+    //     { title: "添加文档文件", description: "将 Markdown (.md) 或 HTML (.html) 文件放入 /data 目录" },
+    //     { title: "组织目录结构", description: "按照需要创建分类目录，添加 README.md 作为分类介绍" },
+    //     { title: "自定义配置", description: "根据需要修改 config.js 文件调整网站外观和功能" },
+    //     { title: "运行 build.py 脚本", description: "创建 path.json 目录文件" },
+    //     { title: "打开浏览器访问", description: "直接在浏览器中打开 index.html 即可使用文档系统" }
+    //   ],
+    //   button_text: "立即开始",
+    //   button_link: "/main/"
+    // }
+  },
+
   // 文档设置
   document: {
     root_dir: "/data", // 文档根目录
+    branch_support: false, // 是否启用分支支持
+    default_branch: "main", // 默认分支名称
+    available_branches: [ // 可用分支列表（与 data/ 下目录一致）
+      // { name: "main", label: "main" },
+      // { name: "1.3.4", label: "v1.3.4" }
+    ],
     default_page: "README.md", // 默认文档
     index_pages: ["README.md", "README.html", "index.md", "index.html"], // 索引页文件名
     supported_extensions: [".md", ".html"], // 支持的文档扩展名
@@ -164,7 +219,26 @@ const config = {
         light: "github", // 亮色主题
         dark: "github-dark" // 暗色主题
       }
-    }
+    },
+    // 外部文档挂载（仅在默认分支下生效，不参与版本分支切换）
+    // mode: "path_json" | "github_tree"
+    // - path_json: url 填写外部 path.json 的完整链接
+    // - github_tree: url 填写 GitHub 目录链接，例如：
+    //   https://github.com/LoosePrince/EasyDocument/tree/main/data/main
+    external_docs: [
+      // {
+      //   mount_path: "外部文档",
+      //   mode: "path_json",
+      //   url: "https://example.com/docs/path.json",
+      //   title: "外部文档"
+      // },
+      // {
+      //   mount_path: "GitHub文档",
+      //   mode: "github_tree",
+      //   url: "https://github.com/owner/repo/tree/main/docs",
+      //   title: "GitHub文档"
+      // }
+    ]
   },
 
   // 搜索功能
@@ -194,13 +268,37 @@ const config = {
       enable: true, // 是否启用Git相关功能
       show_last_modified: true, // 启用文档最后编辑时间显示
       show_contributors: true // 启用参与者名称显示
+    },
+
+    // 进度条显示控制
+    progress_bar: {
+      enable: true // 是否显示文档顶部的阅读进度条，设置为false时隐藏进度指示器
+    },
+
+    // 缓存菜单显示控制
+    cache_menu: {
+      enable: true // 是否显示右下角的缓存菜单按钮，设置为false时隐藏缓存管理入口但不影响缓存功能本身
     }
   },
 
   // 页脚设置
   footer: {
-    copyright: "© 2022-present PF-plugins", // 版权信息
-    show_powered_by: true, // 显示技术支持信息
+    copyright: "© 2026 PFingan (https://www.pfingan.com)", // 版权信息
+
+    // 技术支持信息配置
+    // enable: 是否显示整块 powered by 行
+    powered_by: {
+      enable: true,
+      text: "基于此项目实现：",
+      links: [
+        {
+          text: "EasyDocument",
+          url: "https://github.com/LoosePrince/EasyDocument",
+          external: true
+        }
+      ]
+    },
+
     links: [ // 页脚链接
       {
         text: "GitHub",
@@ -210,6 +308,22 @@ const config = {
         text: "报告问题",
         url: "https://github.com/PFingan-Code/PF-doc/issues"
       }
+    ],
+
+    // 备案信息配置
+    // icp: 最多 1~3 条记录，每条记录为 { text: '备案号', url: '链接(可选)' }
+    // position: "top" 显示在版权信息附近；"bottom" 显示在页脚最底部信息行
+    beian: {
+      enable: false,
+      icp: [],
+      position: "bottom"
+    },
+
+    // 列配置：控制页脚中部各列的展示与类型
+    columns: [
+      { key: "nav", title: "导航", type: "nav", enable: true },
+      { key: "links", title: "资源", type: "links", enable: true },
+      { key: "stack", title: "技术栈", type: "stack", enable: true }
     ]
   }
 };

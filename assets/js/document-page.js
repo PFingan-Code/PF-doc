@@ -1,7 +1,7 @@
 /**
  * 文档页面交互逻辑
  */
-import config from '/config.js';
+import config from './validated-config.js';
 import { initializeMermaid, processMermaidDiagrams } from './mermaid-handler.js';
 import { processKaTeXFormulas } from './katex-handler.js';
 import documentCache from './document-cache.js';
@@ -83,6 +83,7 @@ import {
 } from './sidebar-navigation.js';
 import {
     initUtils,
+    getBranchDataPath,
     filePathToUrl,
     resolvePathFromData,
     findDirectoryIndexPath,
@@ -102,12 +103,27 @@ import {
     setupTocResizer,
     debounce
 } from './utils.js';
+import { initAnimationController, isAnimationEnabled } from './animation-controller.js';
+import { loadExternalDocsIntoPathData, resolveExternalDocumentUrl } from './external-docs.js';
 
 let pathData = null; // 存储文档结构数据
 let currentRoot = null; // 当前根目录
+let currentBranch = null; // 当前分支
 let isLoadingDocument = false; // 是否正在加载文档
 
+async function loadPathDataForBranch(branch) {
+    const rootDir = config.document.root_dir.replace(/\/$/, '');
+    const pathJsonUrl = config.document.branch_support ? `${rootDir}/${branch}/path.json` : '/path.json';
+    const response = await fetch(pathJsonUrl);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const basePathData = await response.json();
+    return await loadExternalDocsIntoPathData(basePathData, branch);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // 初始化动画控制器
+    initAnimationController();
+    
     // 初始化Mermaid
     initializeMermaid();
     
@@ -120,23 +136,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 创建顶部进度条
     createProgressBar();
     
-    // 添加阅读进度条
-    createReadingProgressBar();
+    // 根据配置决定是否添加阅读进度条
+    if (config.extensions.progress_bar.enable) {
+        createReadingProgressBar();
+    }
     
     // 加载文档结构
     try {
-        const response = await fetch('/path.json');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        pathData = await response.json();
+        const { branch } = parseUrlPath();
+        pathData = await loadPathDataForBranch(branch);
         
         // 初始化sundry模块
-        const { path: currentPath, root } = parseUrlPath();
+        const { path: currentPath, root, branch: newBranch } = parseUrlPath();
         currentRoot = root;
+        currentBranch = newBranch;
         
         // 初始化工具模块
         initUtils(pathData, currentRoot);
         
-        initSundryModule(pathData, currentRoot, updateActiveHeading);
+        initSundryModule(pathData, currentRoot, currentBranch, updateActiveHeading);
         
         // 初始化侧边栏导航模块
         initSidebarNavigation(pathData, currentRoot, {
@@ -292,6 +310,15 @@ function applyLayoutConfig() {
     const backToTopButton = document.getElementById('back-to-top');
     if (!config.navigation.back_to_top && backToTopButton) {
         backToTopButton.remove();
+    }
+    
+    // 缓存菜单显示控制
+    if (!config.extensions.cache_menu.enable) {
+        // 如果缓存菜单被禁用，给body添加CSS类来调整返回顶部按钮位置
+        document.body.classList.add('cache-menu-hidden');
+    } else {
+        // 如果缓存菜单启用，移除CSS类
+        document.body.classList.remove('cache-menu-hidden');
     }
 }
 
@@ -504,91 +531,43 @@ function setupMobileMenu() {
 // 从URL加载内容
 async function loadContentFromUrl() {
     // 使用新的URL解析函数获取当前URL信息
-    const { path: initialPath, root, anchor } = parseUrlPath();
+    const parsed = parseUrlPath();
+    const { path: initialPath, root, anchor, branch } = parsed;
     
-
-    
-    // 如果已经在加载中，检查是否是root参数变化的情况
+    // 如果已经在加载中，检查是否是root或branch参数变化的情况
     if (isLoadingDocument) {
-        // 如果root参数发生变化，需要强制重新生成侧边栏
-        if (root !== currentRoot) {
-            
-            // 更新currentRoot
-            currentRoot = root;
-            
-            // 更新工具模块中的currentRoot
-            initUtils(pathData, currentRoot);
-            
-            // 重新初始化侧边栏导航模块
-            initSidebarNavigation(pathData, currentRoot, {
-                parseUrlPath,
-                generateNewUrl,
-                loadContentFromUrl,
-                loadDocument,
-                resolvePathFromData,
-                isIndexFile,
-                debounce,
-                getAllDocumentLinks,
-                generatePrevNextNavigation,
-                updatePageTitle,
-                generateBreadcrumb,
-                updateGitInfo,
-                setupHeadingIntersectionObserver,
-                updateReadingProgress,
-                createEnhancedImageModal,
-                showEnhancedImageModal,
-                isDarkMode,
-                filePathToUrl,
-                initUtils,
-                initSundryModule,
-                updateActiveHeading,
-                handleUrlHash
-            });
-            
-            // 重新生成侧边栏
-            generateSidebar(pathData);
-            
-            // 重新初始化sundry模块（面包屑等）
-            initSundryModule(pathData, currentRoot, updateActiveHeading);
-            
-            // 高亮当前文档（增加更长的延迟确保侧边栏完全生成）
-            setTimeout(() => {
-                highlightCurrentDocument();
-            }, 500);
-        }
-        // console.log('文档正在加载中，跳过重复加载请求');
-        return;
-    }
-    let path = initialPath; // 使用let，因为可能需要修改
-    
-    // 如果有root参数且path不为空，需要检查是否需要转换为完整路径
-    if (root && path && !path.startsWith(root + '/')) {
-        // 将相对路径转换为完整路径
-        path = root + '/' + path;
-    }
-    
-    // 根据path.json解析实际的文件路径
-    if (path) {
-        const { actualPath } = resolvePathFromData(path);
-        if (actualPath && actualPath !== path) {
-            path = actualPath;
+        // 如果root或branch参数发生变化，需要强制重新生成侧边栏和数据
+        if (root === currentRoot && (!config.document.branch_support || branch === currentBranch)) {
+            return;
         }
     }
-    
-    // 获取搜索参数（从旧的查询参数中获取，保持兼容性）
-    const url = new URL(window.location.href);
-    const searchQuery = url.searchParams.get('search');
-    const searchOccurrence = url.searchParams.get('occurrence');
-    
-    // 如果root参数更改或从无到有，需要重新生成侧边栏（正常情况下的处理）
-    if (root !== currentRoot) {
+
+    // 1. 处理分支或根目录变更（必须在解析路径之前完成数据更新）
+    if (root !== currentRoot || (config.document.branch_support && branch !== currentBranch)) {
         currentRoot = root;
+        const branchChanged = config.document.branch_support && branch !== currentBranch;
+        currentBranch = branch;
         
-        // 更新工具模块中的currentRoot
+        // 如果分支改变，重新加载 path.json 和 search.json
+        if (branchChanged) {
+            try {
+                // 加载 path.json（并在默认分支注入外部挂载）
+                pathData = await loadPathDataForBranch(branch);
+                
+                // 加载 search.json
+                if (typeof window.loadSearchData === 'function') {
+                    await window.loadSearchData();
+                }
+            } catch (e) {
+                console.error("分支切换数据加载失败:", e);
+            }
+        }
+
+        // 更新工具模块中的数据
         initUtils(pathData, currentRoot);
         
-        // 重新初始化侧边栏导航模块
-        initSidebarNavigation(pathData, currentRoot, {
+        // 重新初始化各模块依赖
+        const moduleDeps = {
             parseUrlPath,
             generateNewUrl,
             loadContentFromUrl,
@@ -611,16 +590,39 @@ async function loadContentFromUrl() {
             initSundryModule,
             updateActiveHeading,
             handleUrlHash
-        });
+        };
+
+        initSidebarNavigation(pathData, currentRoot, moduleDeps);
         
         // 重新生成侧边栏
         generateSidebar(pathData);
         
         // 重新初始化sundry模块（面包屑等）
-        initSundryModule(pathData, currentRoot, updateActiveHeading);
+        initSundryModule(pathData, currentRoot, currentBranch, updateActiveHeading);
+    }
+
+    let path = initialPath; // 使用let，因为可能需要修改
+    
+    // 如果有root参数且path不为空，需要检查是否需要转换为完整路径
+    if (root && path && !path.startsWith(root + '/')) {
+        // 将相对路径转换为完整路径
+        path = root + '/' + path;
     }
     
-    // 处理默认页面或目录索引页
+    // 2. 根据最新的 path.json 解析实际的文件路径
+    if (path) {
+        const { actualPath } = resolvePathFromData(path);
+        if (actualPath && actualPath !== path) {
+            path = actualPath;
+        }
+    }
+    
+    // 获取搜索参数
+    const url = new URL(window.location.href);
+    const searchQuery = url.searchParams.get('search');
+    const searchOccurrence = url.searchParams.get('occurrence');
+    
+    // 3. 处理默认页面或目录索引页
     if (!path) {
         // 如果没有指定页面，但有root参数，则加载root目录下的README.md
         if (currentRoot) {
@@ -647,20 +649,6 @@ async function loadContentFromUrl() {
             window.history.replaceState({ path: path }, '', newUrl);
         }
         
-    } else {
-        // 支持省略文件扩展名，检查路径是否为目录
-        const hasExtension = hasSupportedExtension(path);
-        if (!hasExtension) {
-            // 尝试在目录后面添加索引文件
-            const indexPath = findDirectoryIndexPath(path);
-            if (indexPath) {
-                // 如果找到了索引页，更新实际加载的路径，但保持URL中的文件夹路径
-                // 不更新URL，保持显示文件夹路径
-                const originalPath = path; // 保存原始的文件夹路径
-                path = indexPath; // 用于加载内容
-                // 不调用 window.history.replaceState，保持URL显示为文件夹路径
-            }
-        }
     }
     
     // 如果经过上述处理后仍然没有有效的路径，则显示欢迎信息
@@ -833,8 +821,8 @@ async function loadDocument(relativePath) {
     const tocNav = document.getElementById('toc-nav');
     tocNav.innerHTML = '<p class="text-gray-400 text-sm">暂无目录</p>';
     
-    // 创建文章加载动画（如果启用）
-    if (config.animation?.article?.enable_skeleton !== false) {
+    // 创建文章加载动画（如果启用，考虑动画总开关）
+    if (isAnimationEnabled('article', 'enable_skeleton')) {
         const articleLoader = createArticleLoader();
         contentDiv.innerHTML = '';
         contentDiv.appendChild(articleLoader);
@@ -850,16 +838,23 @@ async function loadDocument(relativePath) {
     document.body.appendChild(loadingIndicator);
     
     // 构建完整的获取路径，正确处理相对路径和绝对路径
+    const externalUrl = resolveExternalDocumentUrl(relativePath);
     let fetchPath;
-    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+    if (externalUrl) {
+        fetchPath = externalUrl;
+    } else if (
+        relativePath.startsWith('http://') ||
+        relativePath.startsWith('https://') ||
+        relativePath.startsWith('data:')
+    ) {
         // 如果已经是完整URL，直接使用
         fetchPath = relativePath;
     } else {
         // 如果是相对路径，拼接上根目录
         // 确保路径中不会有双斜杠
-        const rootDir = config.document.root_dir.replace(/\/$/, '');
+        const branchDataPath = getBranchDataPath().replace(/\/$/, '');
         const cleanPath = relativePath.replace(/^\//, '');
-        fetchPath = `${rootDir}/${cleanPath}`;
+        fetchPath = `${branchDataPath}/${cleanPath}`;
     }
     
     let successfullyLoaded = false; // 标记是否成功加载了内容
@@ -904,13 +899,10 @@ async function loadDocument(relativePath) {
                 console.log(`已将请求URL从HTTP转换为HTTPS: ${fetchUrl}`);
             }
             
+            // 仅使用简单请求，避免对跨域资源（如 raw.githubusercontent.com）触发预检请求导致 CORS 失败
             const response = await fetch(fetchUrl, {
                 method: 'GET',
-                cache: 'no-store', // 显式禁用缓存
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                }
+                cache: 'no-store'
             });
             
             updateProgressBar(70);
@@ -953,11 +945,18 @@ async function loadDocument(relativePath) {
             // 移除加载动画并显示错误信息
             const loader = contentDiv.querySelector('.article-loader');
             if (loader) {
-                loader.style.transition = 'opacity 0.3s ease-out';
-                loader.style.opacity = '0';
-                setTimeout(() => {
+                const animationEnabled = isAnimationEnabled('article', 'enable_render');
+                const fadeDelay = animationEnabled ? 300 : 0;
+                
+                if (animationEnabled) {
+                    loader.style.transition = 'opacity 0.3s ease-out';
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        contentDiv.innerHTML = `<p class="text-red-500">加载文档失败: ${error.message}</p>`;
+                    }, fadeDelay);
+                } else {
                     contentDiv.innerHTML = `<p class="text-red-500">加载文档失败: ${error.message}</p>`;
-                }, 300);
+                }
             } else {
                 contentDiv.innerHTML = `<p class="text-red-500">加载文档失败: ${error.message}</p>`;
             }
@@ -966,12 +965,22 @@ async function loadDocument(relativePath) {
     }
 
     // 移除加载指示器（添加淡出效果）
-    loadingIndicator.style.opacity = '0';
-    setTimeout(() => {
+    const animationEnabled = isAnimationEnabled('general');
+    const fadeDelay = animationEnabled ? 300 : 0;
+    
+    if (animationEnabled) {
+        loadingIndicator.style.opacity = '0';
+        setTimeout(() => {
+            if (loadingIndicator.parentNode) {
+                loadingIndicator.remove();
+            }
+        }, fadeDelay);
+    } else {
+        // 动画关闭时直接移除
         if (loadingIndicator.parentNode) {
             loadingIndicator.remove();
         }
-    }, 300);
+    }
     
     // 如果成功加载，触发自动预加载和更新侧边栏链接
     if (successfullyLoaded) {
@@ -999,8 +1008,9 @@ async function loadDocument(relativePath) {
 
 // 生成上一篇/下一篇导航
 function generatePrevNextNavigation(currentPath) {
+    if (config.navigation?.prev_next_buttons === false) return;
     const contentDiv = document.getElementById('document-content');
-    
+    if (!contentDiv) return;
     // 移除现有的导航（如果有）
     const existingNav = document.getElementById('prev-next-navigation');
     if (existingNav) {
